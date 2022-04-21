@@ -1,0 +1,66 @@
+no exceptions
+no RAII (destructors)
+memory management should be decoupled from the type
+
+
+USEFUL HEADERS:
+	type_traits
+	bit
+
+UNUSED HEADERS:
+	exception  // the worst
+	coroutine  // 2'nd worst
+	iostream   // 3'rd worst
+	chrono     // 4'rd worst
+	ranges
+	string
+	string_view
+	vector
+	deque
+	array
+	map
+	unordered_map
+	set
+	unordered_set
+	list
+	forward_list
+	memory
+	numeric
+	random
+	regex
+
+UNUSED KEYWORDS:
+	virtual
+	override
+	friend
+	final
+	public
+	private
+	protected
+	throw
+	try
+	catch
+	co_yield
+	co_await
+	co_return
+	static_cast
+	reinterpret_cast
+	const_cast
+	dynamic_cast
+	new
+	delete
+	typeid
+	int
+	unsigned
+	short
+	long
+
+
+Allocator "A" is any type that works with thoose procedures:	
+	sp::Range<uint8_t> alloc(A, size_t)                               - allocate memory with default alignment
+	void free(A, Range<uint8_t>)                                      - free specific memory (not always possible)
+optional allocator procdures:
+	sp::Range<uint8_t> alloc(A, size_t, size_t)                       - allocate memory with specific alignment
+	void free(A)                                                      - free all memory
+	sp::Range<uint8_t> realloc(A, sp::Range<uint8_t>, size_t)         - reallocate memory
+	sp::Range<uint8_t> realloc(A, sp::Range<uint8_t>, size_t, size_t) - reallocate memory

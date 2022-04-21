@@ -1,0 +1,26 @@
+bit_cast - reinterpret the object representation of one type as that of another
+
+byteswap - reverses the bytes in the given integer value
+
+has_single_bit - checks if a number is an integral power of two
+
+bit_ceil - finds the smallest integral power of two not less than the given value
+
+bit_floor - finds the largest integral power of two not greater than the given value
+
+bit_width - finds the smallest number of bits needed to represent the given value
+
+rotl - computes the result of bitwise left-rotation
+
+rotr - computes the result of bitwise right-rotation
+
+countl_zero - counts the number of consecutive 0 bits, starting from the most significant bit
+
+countl_one - counts the number of consecutive 1 bits, starting from the most significant bit
+
+countr_zero - counts the number of consecutive 0 bits, starting from the least significant bit
+
+countr_one - counts the number of consecutive 1 bits, starting from the least significant bit
+
+popcount - counts the number of 1 bits in an unsigned integer
+
