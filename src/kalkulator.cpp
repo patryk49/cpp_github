@@ -592,17 +592,19 @@ size_t parse0(const Token **tokenI, FuncParseInfo *info){
 size_t parse1(const Token **tokenI, FuncParseInfo *info){
 	const Token *&iter = *tokenI;
 	std::vector<Token> *nodes = &info->funcs[info->funcIndex].code;
+	size_t exprSize = 0;
 
-	size_t exprSize = parse0(tokenI, info);
-	
-	if (iter->type == Token::Type::Power){
+	for (;;){
+		size_t last_expr_size = parse0(tokenI, info);
+		exprSize += last_expr_size;
+		if (iter->type != Token::Type::Power) return exprSize;
+		
 		++iter;
 		nodes->emplace_back();
-		std::move_backward(nodes->end()-exprSize-1, nodes->end()-1, nodes->end());
-		new(&*nodes->end()-exprSize-1) Token{Token::Type::Power};
-		exprSize += 1 + parse1(tokenI, info);
+		std::move_backward(nodes->end()-last_expr_size-1, nodes->end()-1, nodes->end());
+		new(&*nodes->end()-last_expr_size-1) Token{Token::Type::Power};
+		++exprSize;
 	}
-	return exprSize;
 }
 
 size_t parse2(const Token **tokenI, FuncParseInfo *info){
