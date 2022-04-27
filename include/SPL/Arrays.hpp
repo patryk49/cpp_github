@@ -71,7 +71,7 @@ SP_CSI void push_range(FiniteArray<T, C> &arr, Range<TR> range) noexcept{
 }
 
 template<class T, size_t C>
-SP_CSI T &&pop_val(FiniteArray<T, C> &arr) noexcept{
+SP_CSI T &&pop_value(FiniteArray<T, C> &arr) noexcept{
 	--arr.size;
 	return (T &&)arr.data[arr.size];
 }
@@ -227,7 +227,7 @@ SP_CSI bool push_value(DynamicArray<T, A> &arr, const TV &value) noexcept{
 
 template<class T, class A> SP_CSI void pop(DynamicArray<T, A> &arr) noexcept{ --arr.size; }
 
-template<class T, class A> SP_CSI T &&pop_val(DynamicArray<T, A> &arr) noexcept{
+template<class T, class A> SP_CSI T &&pop_value(DynamicArray<T, A> &arr) noexcept{
 	return (T &&)((T *)arr.data.ptr)[--arr.size];
 }
 
