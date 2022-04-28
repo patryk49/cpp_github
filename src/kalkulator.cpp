@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <math.h>
 
 #include <complex>
 #include <vector>
