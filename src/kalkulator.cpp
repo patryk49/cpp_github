@@ -231,7 +231,7 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 		case NodeType::Divide:{
 				std::complex<double> y = stack[std::size(stack)-2];
 				if (y.real() == 0.0 && y.imag() == 0.0){
-					printf("dzielenie przez 0");
+					puts("dzielenie przez 0");
 					exit(1);
 				}
 				stack[std::size(stack)-2] = stack.back() / y; 
