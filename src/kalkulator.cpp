@@ -167,10 +167,10 @@ NodeType parse_expression(std::vector<Node> &nodes) noexcept{
 		
 		// OBSLUGA ZAMYKANIA NAWIASOW
 		while (token_it->type == NodeType::ClosePar){
-			if (prec_offset < 0)
-				exit(1); // za duzo prawych nawiasow
 			++token_it;
 			prec_offset -= ParOffset;
+			if (prec_offset < 0)
+				exit(1); // za duzo prawych nawiasow
 		}
 
 		// OBSLUGA OPERATOROW BINARNYCH
@@ -242,7 +242,7 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 		}
 		stack.pop_back();
 	}
-	return stack.back();
+	return stack.front();
 }
 
 
