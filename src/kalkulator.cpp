@@ -218,7 +218,7 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 			continue;
 		case NodeType::UnaryMinus:
 			stack.back() = -stack.back();
-			break;
+			continue;
 		case NodeType::Add:
 			stack[std::size(stack)-2] += stack.back();
 			break;
