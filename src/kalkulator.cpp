@@ -213,10 +213,12 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 		case NodeType::Real:
 			stack.push_back(std::complex<double>{it->value, 0.0});
 			continue;
-
 		case NodeType::Imaginary:
 			stack.push_back(std::complex<double>{0.0, it->value});
 			continue;
+		case NodeType::UnaryMinus:
+			stack.back() = -stack.back();
+			break;
 		case NodeType::Add:
 			stack[std::size(stack)-2] += stack.back();
 			break;
