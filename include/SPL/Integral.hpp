@@ -3,15 +3,10 @@
 #include <stddef.h>
 #include <type_traits>
 
-namespace sp{
-
-template<class T>
-constexpr T QuadratureNodes[];
-
-template<class T>
-constexpr T QuadratureWeights[];
 
 
+template<class T> constexpr T QuadratureNodes[];
+template<class T> constexpr T QuadratureWeights[];
 
 
 
@@ -89,7 +84,7 @@ constexpr double QuadratureWeights<double>[] = {
 	0.0017832807216964
 };
 
-template<class T, class Callable> constexpr static inline
+template<class T, class Callable> constexpr static
 std::enable_if_t<std::is_same_v<T, double>, double>
 integrate(Callable &&function, T begin, T end) noexcept{
 	double scale = (end - begin) / 2.0;
@@ -99,14 +94,18 @@ integrate(Callable &&function, T begin, T end) noexcept{
 
 	for (size_t i=0; i!=32; i+=2){
 		double offset0 = QuadratureNodes<double>[i] * scale;
-		double res0 = (function(midpoint-offset0) + function(midpoint+offset0)) * QuadratureWeights<double>[i];
+		double res0 = (
+			(function(midpoint-offset0) + function(midpoint+offset0))
+			* QuadratureWeights<double>[i];
+		);
 		double offset1 = QuadratureNodes<double>[i+1] * scale;
-		double res1 = (function(midpoint-offset1) + function(midpoint+offset1)) * QuadratureWeights<double>[i+1];
+		double res1 = (
+			(function(midpoint-offset1) + function(midpoint+offset1))
+			* QuadratureWeights<double>[i+1];
+		);
 		sum += res0 + res1;
 	}
 
 	return sum * scale;
 }
 
-
-} // END OF NAMESPACE ///////////////////////////////////////

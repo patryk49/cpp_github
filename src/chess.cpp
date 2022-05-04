@@ -108,15 +108,15 @@ Chess::Piece move_piece(Position f, Position t) noexcept{
 		return Chess::Error;
 	case Chess::WRook:
 	case Chess::BRook:
-		if (sp::abs(t.x-f.x) == 2 && sp::abs(t.y-f.y) != 1) return Chess::Error;
-		if (sp::abs(t.y-f.y) != 2 || sp::abs(t.x-f.x) != 1) return Chess::Error;
+		if (abs(t.x-f.x) == 2 && abs(t.y-f.y) != 1) return Chess::Error;
+		if (abs(t.y-f.y) != 2 || abs(t.x-f.x) != 1) return Chess::Error;
 		
 		break;
 	case Chess::WBishop:
 	case Chess::BBishop:
-		if (sp::abs(t.y-f.y) != sp::abs(t.x-f.x)) return Chess::Error;
+		if (abs(t.y-f.y) != abs(t.x-f.x)) return Chess::Error;
 		{
-			Position step = {sp::sign(t.y-f.y), sp::sign(t.x-f.x)};
+			Position step = {sign(t.y-f.y), sign(t.x-f.x)};
 			for (int i=f.y, j=f.x; (i+=step.y)!=t.y;){
 				j += step.x;
 				if (board[i][j] != Chess::None) return Chess::Error;
@@ -125,8 +125,8 @@ Chess::Piece move_piece(Position f, Position t) noexcept{
 		break;
 	case Chess::WQueen:
 	case Chess::BQueen:
-		if (sp::abs(t.y-f.y) == sp::abs(t.x-f.x)){
-			Position step = {sp::sign(t.y-f.y), sp::sign(t.x-f.x)};
+		if (abs(t.y-f.y) == abs(t.x-f.x)){
+			Position step = {sign(t.y-f.y), sign(t.x-f.x)};
 			for (int i=f.y, j=f.x; (i+=step.y)!=t.y;){
 				j += step.x;
 				if (board[i][j] != Chess::None) return Chess::Error;
@@ -158,7 +158,7 @@ Chess::Piece move_piece(Position f, Position t) noexcept{
 		return Chess::Error;
 	case Chess::WKing:
 	case Chess::BKing:
-		if (sp::abs(t.y-f.y) > 1 || sp::abs(t.x-f.x) > 1) return Chess::Error;
+		if (abs(t.y-f.y) > 1 || abs(t.x-f.x) > 1) return Chess::Error;
 		break;
 	default:
 		return Chess::Error;

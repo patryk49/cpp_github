@@ -2,15 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace sp{
-
 
 // SCANNIG FOR NUMBERS
 template<class T>
 struct ScanNumberRes{ T res; char last; bool not_found; };
 
-template<class T>
-ScanNumberRes<T> scan_number(FILE *const input) noexcept{
+template<class T> static
+ScanNumberRes<T> scan_number(FILE *input) noexcept{
 	ScanNumberRes<T> res;
 	res.not_found = false;
 
@@ -95,9 +93,9 @@ ScanNumberRes<T> scan_number(FILE *const input) noexcept{
 
 struct ScanArrayRes{ uint32_t size; char last; };
 
-template<class Cont>
+template<class Cont> static
 ScanArrayRes scan_array(
-	Cont &arr, FILE *const input, const char separator = ' '
+	Cont &arr, FILE *input, const char separator = ' '
 ) noexcept{
 	using T = typename Cont::ValueType;
 	ScanNumberRes<T> num;
@@ -116,9 +114,9 @@ ScanArrayRes scan_array(
 
 struct ScanMatrixRes{ uint32_t rows, cols; char last; bool col_mismatch; };
 
-template<class Cont>
+template<class Cont> static
 ScanMatrixRes scan_matrix(
-	Cont &arr, FILE *const input, const char col_separator = ' '
+	Cont &arr, FILE *input, const char col_separator = ' '
 ) noexcept{
 	ScanMatrixRes res{0, 0, '\0', false};
 	ScanArrayRes arr_info;
@@ -143,4 +141,3 @@ Return:
 	return res;
 }
 
-} // END OF NAMESPACE /////////////////////////////////////////////////////////////////////////////
