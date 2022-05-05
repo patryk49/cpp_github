@@ -201,7 +201,7 @@ ErrorInfo parse_expression(std::vector<Node> &nodes) noexcept{
 		// OBSLUGA ZAMYKANIA NAWIASOW
 		while (token_it->type == NodeType::ClosePar){
 			prec_offset -= ParOffset;
-			[[unlikely]] if (prec_offset < 0)
+			if (prec_offset < 0)
 				return ErrorInfo{ErrorType::TooManyClosingParenthesis, token_it->position};
 			++token_it;
 		}
@@ -213,9 +213,9 @@ ErrorInfo parse_expression(std::vector<Node> &nodes) noexcept{
 		// brak operatora binarnego oznacza koniec wyrazenia 
 		if (token.type > NodeType::Power){
 			nodes.resize(node_it - std::begin(nodes));
-			[[unlikely]] if (token.type != NodeType::End)
+			if (token.type != NodeType::End)
 				return ErrorInfo{ErrorType::WrongSyntax, token.position};
-			[[unlikely]] if (prec_offset != 0)
+			if (prec_offset != 0)
 				return ErrorInfo{ErrorType::MissingClosingParenthesis, token.position};
 			return {ErrorType::None};
 		}
