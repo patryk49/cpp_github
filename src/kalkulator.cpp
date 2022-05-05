@@ -25,7 +25,7 @@ enum class NodeType : uint8_t{
 	Memory,
 
 	OpenPar, ClosePar,
-	Null,
+	End,
 };
 
 // tablica zawierajaca prirytety operatorow
@@ -37,7 +37,7 @@ int PrecedenceTable[5] = {
 
 struct Node{
 	NodeType type;
-	uint32_t pos;
+	uint32_t position;
 
 	union{
 		double value;
@@ -46,11 +46,36 @@ struct Node{
 };
 
 
+enum class ErrorType : uint32_t{
+	None = 0,
+	UnrecognizedToken,
+	TooHighMemoryIndex,
+	TooManyClosingParenthesis,
+	MissingValue,
+	WrongSyntax,
+	MissingClosingParenthesis,
+	DivisionByZero,
+};
 
-std::vector<Node> make_tokens(const char *it){
+struct ErrorInfo{
+	ErrorType type;	
+	uint32_t position;
+};
+
+
+
+
+struct TokensResult{
+	std::vector<Node> tokens;
+	ErrorInfo error;
+};
+
+auto make_tokens(const char *str){
+	const char *it = str;
 	std::vector<Node> tokens;
 	for (;;){
 		Node token;
+		token.position = it - str;
 		switch (*it){
 		case '0':
 		case '1':
@@ -73,6 +98,14 @@ std::vector<Node> make_tokens(const char *it){
 			token.type = NodeType::Imaginary;
 			token.value = 1.0;
 			break;
+		case 'm':{
+			++it;
+			token.type = NodeType::Memory;
+			token.index = *it - '0';
+			if (token.index >= 10)
+				return TokensResult{{}, {ErrorType::TooHighMemoryIndex, token.position}};
+			break;
+		}
 		case '+':
 			token.type = NodeType::Add;
 			break;
@@ -100,12 +133,12 @@ std::vector<Node> make_tokens(const char *it){
 			continue;
 		case '\n':
 		case '\0':
-			token.type = NodeType::Null;
+			token.type = NodeType::End;
 			tokens.push_back(token);
-			return tokens;
+			return TokensResult{std::move(tokens), {ErrorType::None}};
 		default:
-			puts("niewlasciwy znak");
-			exit(1); // cos z tym zrobic
+		Default:
+			return TokensResult{{}, {ErrorType::UnrecognizedToken, token.position}};
 		}
 		tokens.push_back(token);
 		++it;
@@ -121,7 +154,7 @@ struct PrecedenceInfo{
 
 // funkcja 'parse expression' usowa nieptrzebne wezly oraz zmienia ich
 // kolejnosc tak aby tablica stala sie tablicowa reprezentacja drzewa
-NodeType parse_expression(std::vector<Node> &nodes) noexcept{
+ErrorInfo parse_expression(std::vector<Node> &nodes) noexcept{
 	std::vector<PrecedenceInfo> precs;
 	precs.push_back(PrecedenceInfo{0, {}});
 
@@ -162,15 +195,15 @@ NodeType parse_expression(std::vector<Node> &nodes) noexcept{
 			++node_it;
 			break;
 		default:
-			exit(1); // spodziewano sie wartosci liczbowej
+			return ErrorInfo{ErrorType::MissingValue, token.position};
 		}
 		
 		// OBSLUGA ZAMYKANIA NAWIASOW
 		while (token_it->type == NodeType::ClosePar){
-			++token_it;
 			prec_offset -= ParOffset;
-			if (prec_offset < 0)
-				exit(1); // za duzo prawych nawiasow
+			[[unlikely]] if (prec_offset < 0)
+				return ErrorInfo{ErrorType::TooManyClosingParenthesis, token_it->position};
+			++token_it;
 		}
 
 		// OBSLUGA OPERATOROW BINARNYCH
@@ -180,7 +213,11 @@ NodeType parse_expression(std::vector<Node> &nodes) noexcept{
 		// brak operatora binarnego oznacza koniec wyrazenia 
 		if (token.type > NodeType::Power){
 			nodes.resize(node_it - std::begin(nodes));
-			return token.type;
+			[[unlikely]] if (token.type != NodeType::End)
+				return ErrorInfo{ErrorType::WrongSyntax, token.position};
+			[[unlikely]] if (prec_offset != 0)
+				return ErrorInfo{ErrorType::MissingClosingParenthesis, token.position};
+			return {ErrorType::None};
 		}
 		int precedence = PrecedenceTable[(size_t)token.type] + prec_offset;
 
@@ -201,9 +238,16 @@ NodeType parse_expression(std::vector<Node> &nodes) noexcept{
 
 
 
+struct CalculationResult{
+	std::complex<double> value;
+	ErrorInfo error;
+};
 
 
-std::complex<double> calculate(const std::vector<Node> &expr){
+// PAMIEC DZIESIECIU OSTATNICH OPERACJI
+std::complex<double> calc_memory[10];
+
+CalculationResult calculate(const std::vector<Node> &expr){
 	std::vector<std::complex<double>> stack;
 
 	auto it = std::end(expr);
@@ -215,6 +259,9 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 			continue;
 		case NodeType::Imaginary:
 			stack.push_back(std::complex<double>{0.0, it->value});
+			continue;
+		case NodeType::Memory:
+			stack.push_back(calc_memory[it->index]);
 			continue;
 		case NodeType::UnaryMinus:
 			stack.back() = -stack.back();
@@ -230,10 +277,8 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 			break;
 		case NodeType::Divide:{
 				std::complex<double> y = stack[std::size(stack)-2];
-				if (y.real() == 0.0 && y.imag() == 0.0){
-					puts("dzielenie przez 0");
-					exit(1);
-				}
+				if (y.real() == 0.0 && y.imag() == 0.0)
+					return CalculationResult{{}, {ErrorType::DivisionByZero, it->position}};
 				stack[std::size(stack)-2] = stack.back() / y; 
 			} break;
 		case NodeType::Power:
@@ -242,7 +287,7 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 		}
 		stack.pop_back();
 	}
-	return stack.front();
+	return CalculationResult{stack.front(), {ErrorType::None}};
 }
 
 
@@ -250,28 +295,64 @@ std::complex<double> calculate(const std::vector<Node> &expr){
 
 
 
-
-
+void print_error(const char *text, uint32_t position){
+	for (size_t i=0; i!=position; ++i) putchar(' ');
+	printf("^= %s\n", text);
+};
 
 
 void print_nodes(const std::vector<Node> &nodes);
 
-int main(int argc, char **argv){
-	if (argc != 2){
-		puts("padaj wyrazenie matematyczne jako argument funkcji");
-		return 1;
+int main(){
+	char str[128];
+	std::fill(std::begin(calc_memory), std::end(calc_memory), std::complex<double>{});
+
+	for (;;){
+		if (!fgets(str, sizeof(str), stdin)) return 0;
+	
+		auto [tokens, token_error] = make_tokens(str);
+		switch (token_error.type){
+		case ErrorType::UnrecognizedToken:
+			print_error("nieorozpoznany znak", token_error.position);
+			continue;
+		case ErrorType::TooHighMemoryIndex:
+			print_error("po znaku 'm' powinna wystapis liczba od 0 do 9", token_error.position);
+			continue;
+		default: break;
+		}
+		
+	
+		ErrorInfo expr_error = parse_expression(tokens);
+		switch (expr_error.type){
+		case ErrorType::MissingClosingParenthesis:
+			print_error("brak zamykajacych nawiasow", expr_error.position);
+			continue;
+		case ErrorType::MissingValue:
+			print_error("brak wartosci liczbowej", expr_error.position);
+			continue;
+		case ErrorType::TooManyClosingParenthesis:
+			print_error("zbyt duzo zamykajacych nawiasow", expr_error.position);
+			continue;
+		case ErrorType::WrongSyntax:
+			print_error("niewlasciwa skladnia", expr_error.position);
+			continue;
+		default: break;
+		}	
+	//	print_nodes(tokens);
+	
+		auto [result, calc_error] = calculate(tokens);
+		if (calc_error.type == ErrorType::DivisionByZero){
+			print_error("dzielenie przez zero", calc_error.position);
+			continue;
+		}
+
+		printf("= %lg", result.real());
+		if (result.imag() != 0.0) printf(" + %lgi", result.imag());
+		putchar('\n');
+
+		std::move(std::begin(calc_memory), std::end(calc_memory)-1, std::begin(calc_memory)+1);
+		calc_memory[0] = result;
 	}
-	std::vector<Node> tokens = make_tokens(argv[1]);
-
-	parse_expression(tokens);
-//	print_nodes(tokens);
-
-	std::complex<double> result = calculate(tokens);
-	printf("= %lg", result.real());
-	if (result.imag() != 0.0) printf(" + %lgi", result.imag());
-	putchar('\n');
-
-	return 0;
 }
 
 
