@@ -40,12 +40,19 @@ int main(int argc, char **argv){
 	bool is_relative = false;
 	if (argc == 2) is_relative = argv[1][0]=='+' || argv[1][0]=='-';
 
-	FILE *br_file = fopen(br_filepath, is_relative ? "r+" : "w");
+	FILE *br_file = fopen(br_filepath, "r+");
 	if (!br_file){
 		fprintf(stderr, "could not open a file: %s\n", br_filepath);
 		return 1;
 	}
 
+	size_t prevbr;
+	if (fscanf(br_file, "%lu", &prevbr) != 1){
+		fprintf(stderr, "wrong format of the data in file: %s\n", maxbr_filepath);
+		fclose(br_file);
+		return 1;
+	}
+	
 	size_t br;
 	if (argc == 2){
 		char *flag_ptr;
@@ -55,13 +62,6 @@ int main(int argc, char **argv){
 			return 1;
 		}
 		if (is_relative){
-			size_t prevbr;
-			if (fscanf(br_file, "%lu", &prevbr) != 1){
-				fprintf(stderr, "wrong format of the data in file: %s\n", maxbr_filepath);
-				fclose(br_file);
-				return 1;
-			}
-
 			if (argv[1][0] == '+'){
 				br = prevbr + br;
 				if (br < prevbr) br = maxbr;
@@ -69,9 +69,10 @@ int main(int argc, char **argv){
 				br = prevbr - br;
 				if (br > prevbr) br = minbr;
 			}
+			if (br == prevbr) return 0;
 		}
 	} else{
-		br = maxbr;
+		br = prevbr==maxbr ? minbr : maxbr;
 	}
 		
 	fprintf(br_file, "%lu", (unsigned long)(minbr<br ? br<maxbr ? br : maxbr : minbr));
