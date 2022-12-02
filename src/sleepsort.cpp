@@ -26,8 +26,8 @@ int main(){
 	std::vector<uint32_t> input;
 	input.reserve(32);
 
-	char str[128];
-	fgets(str, 127, stdin);
+	char str[1 << 16];
+	fgets(str, sizeof(str)/sizeof(str[0]), stdin);
 
 	for (const char *I=str; *I; ++I){
 		if (isNumber(*I)){

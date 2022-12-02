@@ -1,7 +1,14 @@
 #pragma once
 
+#define SP_CI constexpr inline
+#define SP_SI static inline
+#define SP_CSI constexpr static inline
+
 #include "Initializators.hpp"
 
+#undef SP_CI
+#undef SP_SI
+#undef SP_CSI
 
 namespace sp{
 

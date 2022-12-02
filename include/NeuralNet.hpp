@@ -31,7 +31,7 @@ struct NNLayer{
 	float (*activation_function)(float) = (float (*)(float))nn_ramp;
 	float (*activation_derivative)(float) = (float (*)(float))nn_ramp_derivative;
 
-	float learning_rate = 1.f;
+	float learning_rate = 0.1f;
 };
 
 
@@ -76,7 +76,8 @@ void back_propagate(NNLayer &layer, Vector<float> &gradients){
 	
 	gradients = tr(layer.weights) * layer.sums;
 
-	layer.biases -= layer.sums * layer.learning_rate;
+	layer.sums *= layer.learning_rate;
+	layer.biases -= layer.sums;
 	layer.weights -= outer_prod(layer.sums, *layer.inputs);
 }
 

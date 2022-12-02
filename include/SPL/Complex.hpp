@@ -3,11 +3,10 @@
 #include "Utils.hpp"
 #include <math.h>
 
-namespace sp{
-
 template<class T = double>
 struct Complex{
-	T real, imag;
+	T real;
+	T imag = Null<T>;
 	typedef T ValueType;
 
 	constexpr Complex<T> &operator +=(Complex<T> rhs) noexcept{
@@ -133,8 +132,8 @@ constexpr auto operator /(TT lhs, Complex<TT> rhs) noexcept{
 }
 
 
-template<class TT>
-SP_CSI TT abs(Complex<TT> arg) noexcept{
+template<class TT> constexpr
+TT abs(Complex<TT> arg) noexcept{
 	return sqrt(arg.real*arg.real + arg.imag*arg.imag);
 }
 
@@ -204,6 +203,3 @@ constexpr Complex<TT> tan(Complex<TT> arg) noexcept{
 	return Complex<TT>{::std::sin(arg.real)*rCos/denom, iSinh*::std::cosh(arg.imag)/denom};
 }
 
-
-
-} // END OF NAMESPACE ///////////////////////////////////////

@@ -50,17 +50,17 @@ UNUSED KEYWORDS:
 	new
 	delete
 	typeid
-	int
 	unsigned
 	short
 	long
 
 
 Allocator "A" is any type that works with thoose procedures:	
-	sp::Range<uint8_t> alloc(A, size_t)                               - allocate memory with default alignment
-	void free(A, Range<uint8_t>)                                      - free specific memory (not always possible)
-optional allocator procdures:
-	sp::Range<uint8_t> alloc(A, size_t, size_t)                       - allocate memory with specific alignment
-	void free(A)                                                      - free all memory
-	sp::Range<uint8_t> realloc(A, sp::Range<uint8_t>, size_t)         - reallocate memory
-	sp::Range<uint8_t> realloc(A, sp::Range<uint8_t>, size_t, size_t) - reallocate memory
+	Memblock alloc(A, size_t)                     - allocate memory with default alignment
+	void free(A, Memblock)                        - free specific memory (not always possible)
+
+optional allocator procedures:
+	Memblock alloc(A, size_t, size_t)             - allocate memory with specific alignment
+	void free(A)                                  - free all memory
+	Memblock realloc(A, Memblock, size_t)         - reallocate memory
+	Memblock realloc(A, Memblock, size_t, size_t) - reallocate memory

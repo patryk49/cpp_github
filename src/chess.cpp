@@ -108,8 +108,8 @@ Chess::Piece move_piece(Position f, Position t) noexcept{
 		return Chess::Error;
 	case Chess::WRook:
 	case Chess::BRook:
-		if (abs(t.x-f.x) == 2 && abs(t.y-f.y) != 1) return Chess::Error;
-		if (abs(t.y-f.y) != 2 || abs(t.x-f.x) != 1) return Chess::Error;
+		if (abs(t.x-f.x) != 2 && abs(t.y-f.y) != 1) return Chess::Error;
+		if (abs(t.y-f.y) != 2 && abs(t.x-f.x) != 1) return Chess::Error;
 		
 		break;
 	case Chess::WBishop:

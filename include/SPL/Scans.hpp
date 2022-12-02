@@ -4,19 +4,69 @@
 
 
 // SCANNIG FOR NUMBERS
+template<class A>
+Array<char> read_text(FILE *input, A &allocator, size_t expected_length = 64) noexcept{
+	Array<char> res = {alloc(allocator, expected_length), 0};
+	
+	for (;;){
+		int c = getc(input);
+		[[unlikely]] if (c == EOF) break;
+
+		if (res.size == res.cap){
+			auto[new_ptr, new_cap] = realloc(allocator, Memblock{res.ptr, res.cap}, res.size*2);
+			if (new_ptr == nullptr){
+				free(allocator, Memblock{res.ptr, res.cap});
+				return Array<char>{nullptr, 0, 0};
+			}
+			res.ptr = new_ptr;
+			res.cap = new_cap;
+		}
+
+		res[res.size] = (char)c;
+		++res.size;
+	}
+	return res;
+}
+
+/*
+template<class A>
+Array<Span<char>> scan_text(FILE *input, A &allocator, Span<char> delim) noexcept{
+	Array<char> res = {alloc(allocator, 128), 0};
+
+	uint8_t delim_counter[32];
+	for (auto &it : delim_counter) it = 0;
+
+	for (;;){
+		int c = getc(input);
+		[[unlikely]] if ((char)c==delim || c==EOF) break;
+
+		if (res.size == res.data.size){
+			Memblock new_data = realloc(res.data, allocator, res.size*2);
+			if (new_data.ptr == nullptr){
+				free(allocator, res.data);
+				return Array<char>{{nullptr, 0}, 0};
+			}
+			res.data = new_data;
+		}
+
+		res[res.size] = (char)c;
+		++res.size;
+	}
+	return res;
+}
+*/
+
 template<class T>
-struct ScanNumberRes{ T res; char last; bool not_found; };
+struct ReadDataRes{ T res; bool not_found; char last; };
 
 template<class T> static
-ScanNumberRes<T> scan_number(FILE *input) noexcept{
-	ScanNumberRes<T> res;
+ReadDataRes<T> read_data(FILE *input) noexcept{
+	ReadDataRes<T> res;
 	res.not_found = false;
 
-	do{
-		res.last = getc(input);
-	} while (res.last==' ' || res.last=='\t');
 
 	if constexpr (std::is_integral_v<T>){
+		do{ res.last = getc(input); } while (res.last==' ' || res.last=='\t');
 		if constexpr (std::is_unsigned_v<T>){
 			if (res.last<'0' || res.last>'9'){
 				res.not_found = true;
@@ -52,8 +102,8 @@ ScanNumberRes<T> scan_number(FILE *input) noexcept{
 			}
 		}
 	} else if constexpr (std::is_floating_point_v<T>){
+		do{ res.last = getc(input); } while (res.last==' ' || res.last=='\t');
 		bool neg = false;
-
 
 		if (res.last=='+' || res.last=='-'){
 			neg = res.last == '-';
@@ -84,42 +134,54 @@ ScanNumberRes<T> scan_number(FILE *input) noexcept{
 			}
 			res.res += (T)((int8_t)res.last-'0') * scale;
 		}
+	} else if constexpr(is_tuple<T>){
+		auto[head_data, err, last] = read_data<decltype(res.res.head)>(input);
+		res.last = last;
+		if (err){ res.not_found = true; return res; }
+		res.res.head = head_data;
+
+		if constexpr (len(res.res) != 1){
+			auto[tail_data, err, last] = read_data<decltype(res.res.tail)>(input);
+			res.last = last;
+			if (err){ res.not_found = true; return res; }
+			res.res.tail = tail_data;
+		}
+		
+		return res;
 	} else{
 		static_assert(true, "wrong type");
 	}
 }
 
+template<class T> struct ReadArrayRes{
+	Array<T> res = {nullptr, 0, 0};
+	bool alloc_error = false;
+	char last;
+};
 
-
-struct ScanArrayRes{ uint32_t size; char last; };
-
-template<class Cont> static
-ScanArrayRes scan_array(
-	Cont &arr, FILE *input, const char separator = ' '
-) noexcept{
-	using T = typename Cont::ValueType;
-	ScanNumberRes<T> num;
-
-	uint32_t n = 0;
+template<class T, class A> static
+ReadArrayRes<T> read_array(FILE *input, A &allocator, char separator = ' ') noexcept{
+	ReadArrayRes<T> res = {};
+	ReadDataRes<T> elem;
 	for (;;){
-		num = scan_number<T>(input);
-		[[unlikely]] if (num.not_found) break;
-		push_value(arr, num.res);
-		++n;
-		if (num.last != separator) break;
+		elem = read_data<T>(input);
+		[[unlikely]] if (elem.not_found) break;
+		
+		res.alloc_error = push_value(res.res, elem.res, allocator);
+		if (res.alloc_error) break;
+		
+		if (elem.last != separator) break;
 	}
-	return ScanArrayRes{n, num.last};
+	return res;
 }
 
-
-struct ScanMatrixRes{ uint32_t rows, cols; char last; bool col_mismatch; };
+/*
+struct ScanMatrixRes{ uint32_t rows; uint32_t cols; char last; uint16_t col_mismatch; };
 
 template<class Cont> static
-ScanMatrixRes scan_matrix(
-	Cont &arr, FILE *input, const char col_separator = ' '
-) noexcept{
-	ScanMatrixRes res{0, 0, '\0', false};
-	ScanArrayRes arr_info;
+ScanMatrixRes scan_matrix(Cont &arr, FILE *input, char col_separator = ' ') noexcept{
+	ScanMatrixRes res{0, 0, '\0', 0};
+	ReadArrayRes arr_info;
 
 	arr_info = scan_array(arr, input, col_separator);
 	res.cols = arr_info.size;
@@ -131,13 +193,12 @@ ScanMatrixRes scan_matrix(
 		
 		if (!arr_info.size) break;
 		[[unlikely]] if (arr_info.size != res.cols){
-			res.col_mismatch = true;
-			res.rows += arr_info.size > res.cols;
+			res.col_mismatch = arr_info.size;
 			break;
-		}		
+		}
 	}
 Return:
 	res.last = arr_info.last;
 	return res;
 }
-
+*/

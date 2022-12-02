@@ -24,7 +24,7 @@ enum class StupidVectorFlagType{};
 
 
 struct DDAJSLdjsaldjaslkdjashdlDASLJD{
-	DynamicArray<uint64_t, sp::MallocAllocator<>> data = {{nullptr, 0}, 0, nullptr};
+	DynamicArray<uint64_t, MallocAllocator<>> data = {{nullptr, 0}, 0, nullptr};
 	size_t stack_pos = 0;
 } MatrixTempStorage;
 
@@ -175,7 +175,7 @@ struct MatrixDynamic{
 	Memblock data = {nullptr, 0};
 	uint32_t rows = 0;
 	uint32_t cols = 0;
-	A *allocator = nullptr;
+	[[no_unique_address]] A *allocator = nullptr;
 };
 
 template<class T, bool rowMaj, class A>

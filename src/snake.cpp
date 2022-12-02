@@ -13,7 +13,7 @@ uint8_t grid[rows][cols];
 size_t points;
 
 
-sp::Rand32 rng{clock()};
+Rand32 rng{clock()};
 
 void spawn_snack() noexcept{
 	for (;;){
@@ -70,7 +70,6 @@ int main(){
 
 Start:
 	timeout(0);
-//	sp::init(grid);
 	
 	grid[rows/2+0][cols/2] = 'w';
 	grid[rows/2+1][cols/2] = 'w';
