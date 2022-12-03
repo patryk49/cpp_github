@@ -216,11 +216,11 @@ bool operator !=(const FiniteArray<TL, CL> &lhs, const FiniteArray<TR, CR> &rhs)
 #endif
 struct DynamicArray{
 	T &operator [](size_t index) noexcept{
-		return *((T *)this->data.ptr + index);
+		return *((T *)this->.ptr + index);
 	}
 	
 	const T &operator [](size_t index) const noexcept{
-		return *((const T *)this->data.ptr + index);
+		return *((const T *)this->.ptr + index);
 	}
 	
 	typedef T ValueType;

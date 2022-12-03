@@ -134,6 +134,11 @@ ReadDataRes<T> read_data(FILE *input) noexcept{
 			}
 			res.res += (T)((int8_t)res.last-'0') * scale;
 		}
+	} else if constexpr (std::is_same_v<T, char>){
+		int i = getc(input);
+		res.err = i == EOF;
+		res.res = (char)i;
+		return res;
 	} else if constexpr(is_tuple<T>){
 		auto[head_data, err, last] = read_data<decltype(res.res.head)>(input);
 		res.last = last;
